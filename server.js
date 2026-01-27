@@ -100,7 +100,7 @@ function requireAuth(req, res, next) {
 }
 
 // get all cards
-app.get("/allcards", async (req, res) => {
+app.get("/allCard", async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT * FROM assignments");
         res.json(rows);
