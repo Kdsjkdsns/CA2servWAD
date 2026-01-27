@@ -101,16 +101,15 @@ function requireAuth(req, res, next) {
 
 // get all cards
 app.get("/allCard", async (req, res) => {
-    try {
-        const [rows] = await pool.query("SELECT * FROM assignments");
-        res.json(rows);
-    } catch (error) {
-        console.error("Error fetching assignments:", error);
-        res
-            .status(500)
-            .json({ error: "Internal Server Error for getting all assignments" });
-    }
+  try {
+    const [rows] = await pool.query("SELECT * FROM assignments");
+    res.json(rows);
+  } catch (error) {
+    console.error("FULL ERROR:", error); // <- THIS WILL SHOW IN RENDER LOGS
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
+
 
 // add a new card
 app.post("/addcard", requireAuth, async (req, res) => {
