@@ -102,13 +102,13 @@ function requireAuth(req, res, next) {
 // get all cards
 app.get("/allcards", async (req, res) => {
     try {
-        const [rows] = await pool.query("SELECT * FROM cards");
+        const [rows] = await pool.query("SELECT * FROM assignments");
         res.json(rows);
     } catch (error) {
-        console.error("Error fetching cards:", error);
+        console.error("Error fetching assignments:", error);
         res
             .status(500)
-            .json({ error: "Internal Server Error for getting all cards" });
+            .json({ error: "Internal Server Error for getting all assignments" });
     }
 });
 
@@ -116,53 +116,53 @@ app.get("/allcards", async (req, res) => {
 app.post("/addcard", requireAuth, async (req, res) => {
     const { cardname, cardpic } = req.body;
 
-    if (!cardname || !cardpic) {
+    if (!assignmentname || !duedate || !status) {
         return res
             .status(400)
-            .json({ error: "card_name and card_pic are required" });
+            .json({ error: "assignmentname, duedate and status are required" });
     }
 
     try {
         const [result] = await pool.query(
-            "INSERT INTO cards (cardname, cardpic) VALUES (?, ?)",
-            [cardname, cardpic],
+            "INSERT INTO assignments (assignmentname, duedate, status) VALUES (?, ?, ?)",
+            [assignmentname, duedate, status],
         );
         res.status(201).json(result);
     } catch (error) {
-        console.error("Error adding card:", error);
-        res.status(500).json({ error: "Internal Server Error for adding a card" });
+        console.error("Error adding assignment:", error);
+        res.status(500).json({ error: "Internal Server Error for adding an assignment" });
     }
 });
 
 // update a card, week 10
 app.put("/updatecard/:id", async (req, res) => {
     const { id } = req.params;
-    const { cardname, cardpic } = req.body;
+    const { assignmentname, duedate, status } = req.body;
 
-    if (!cardname || !cardpic) {
+    if (!assignmentname || !duedate || !status) {
         return res
             .status(400)
-            .json({ error: "card_name and card_pic are required" });
+            .json({ error: "assignmentname, duedate and status are required" });
     }
 
     try {
         const [result] = await pool.query(
-            "UPDATE cards SET cardname = ?, cardpic = ? WHERE id = ?",
-            [cardname, cardpic, id],
+            "UPDATE assignments SET assignmentname = ?, duedate = ?, status = ? WHERE id = ?",
+            [assignmentname, duedate, status, id],
         );
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ error: "Card not found" });
+            return res.status(404).json({ error: "Assignment not found" });
         }
 
         res
             .status(200)
-            .json({ message: "Card updated", affectedRows: result.affectedRows });
+            .json({ message: "Assignment updated", affectedRows: result.affectedRows });
     } catch (error) {
-        console.error("Error updating card:", error);
+        console.error("Error updating assignment:", error);
         res
             .status(500)
-            .json({ error: "Internal Server Error for updating a card" });
+            .json({ error: "Internal Server Error for updating an assignment" });
     }
 });
 
@@ -171,19 +171,19 @@ app.delete("/deletecard/:id", async (req, res) => {
     const { id } = req.params;
 
     try {
-        const [result] = await pool.query("DELETE FROM cards WHERE id = ?", [id]);
+        const [result] = await pool.query("DELETE FROM assignments WHERE id = ?", [id]);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ error: "Card not found" });
+            return res.status(404).json({ error: "Assignment not found" });
         }
 
         res
             .status(200)
-            .json({ message: "Card deleted", affectedRows: result.affectedRows });
+            .json({ message: "Assignment deleted", affectedRows: result.affectedRows });
     } catch (error) {
-        console.error("Error deleting card:", error);
+        console.error("Error deleting assignment:", error);
         res
             .status(500)
-            .json({ error: "Internal Server Error for deleting a card" });
+            .json({ error: "Internal Server Error for deleting an assignment" });
     }
 });
