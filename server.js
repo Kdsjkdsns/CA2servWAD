@@ -186,3 +186,13 @@ app.delete("/deletecard/:id", async (req, res) => {
             .json({ error: "Internal Server Error for deleting an assignment" });
     }
 });
+
+app.get("/test-db", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT DATABASE() AS dbname");
+    res.json({ success: true, database: rows[0].dbname });
+  } catch (error) {
+    console.error("DB test failed:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
