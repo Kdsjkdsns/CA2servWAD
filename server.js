@@ -114,7 +114,7 @@ app.get("/allcards", async (req, res) => {
 
 // add a new card
 app.post("/addcard", requireAuth, async (req, res) => {
-    const { cardname, cardpic } = req.body;
+    const { assignmentname, duedate, status } = req.body;
 
     if (!assignmentname || !duedate || !status) {
         return res
