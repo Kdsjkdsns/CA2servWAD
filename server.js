@@ -9,7 +9,40 @@ app.use(express.json());
 
 const port = process.env.PORT || 3000;
 
-// database connection configuration
+// database connection configurationconst API_BASE_URL = process.env.REACT_APP_API_URL || "";
+
+// GET all assignments
+export async function getAssignments() {
+    const res = await fetch(`${API_BASE_URL}/assignments`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+}
+
+// ADD a new assignment
+export function addAssignment(assignment) {
+    return fetch(`${API_BASE_URL}/assignments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(assignment),
+    });
+}
+
+// UPDATE an assignment
+export function updateAssignment(id, assignment) {
+    return fetch(`${API_BASE_URL}/assignments/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(assignment),
+    });
+}
+
+// DELETE an assignment
+export function deleteAssignment(id) {
+    return fetch(`${API_BASE_URL}/assignments/${id}`, {
+        method: "DELETE",
+    });
+}
+
 const dbConfig = {
     host: (process.env.DB_HOST || "").trim(),
     user: (process.env.DB_USER || "").trim(),
@@ -99,20 +132,20 @@ function requireAuth(req, res, next) {
     }
 }
 
-// get all cards
-app.get("/allCard", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT * FROM assignments");
-    res.json(rows);
-  } catch (error) {
-    console.error("FULL ERROR:", error); // <- THIS WILL SHOW IN RENDER LOGS
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+
+app.get("/assignments", async (req, res) => {
+    try {
+        const [rows] = await pool.query("SELECT * FROM assignments");
+        res.json(rows);
+    } catch (error) {
+        console.error("Error fetching assignments:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
 
 
-// add a new card
-app.post("/addcard", requireAuth, async (req, res) => {
+// add a new assignment
+app.post("/assignments", async (req, res) => {
     const { assignmentname, duedate, status } = req.body;
 
     if (!assignmentname || !duedate || !status) {
@@ -124,17 +157,19 @@ app.post("/addcard", requireAuth, async (req, res) => {
     try {
         const [result] = await pool.query(
             "INSERT INTO assignments (assignmentname, duedate, status) VALUES (?, ?, ?)",
-            [assignmentname, duedate, status],
+            [assignmentname, duedate, status]
         );
-        res.status(201).json(result);
+
+        res.status(201).json({ id: result.insertId });
     } catch (error) {
         console.error("Error adding assignment:", error);
-        res.status(500).json({ error: "Internal Server Error for adding an assignment" });
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
-// update a card, week 10
-app.put("/updatecard/:id", async (req, res) => {
+
+// update assignment
+app.put("/assignments/:id", async (req, res) => {
     const { id } = req.params;
     const { assignmentname, duedate, status } = req.body;
 
@@ -147,52 +182,38 @@ app.put("/updatecard/:id", async (req, res) => {
     try {
         const [result] = await pool.query(
             "UPDATE assignments SET assignmentname = ?, duedate = ?, status = ? WHERE id = ?",
-            [assignmentname, duedate, status, id],
+            [assignmentname, duedate, status, id]
         );
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: "Assignment not found" });
         }
 
-        res
-            .status(200)
-            .json({ message: "Assignment updated", affectedRows: result.affectedRows });
+        res.json({ message: "Assignment updated successfully" });
     } catch (error) {
         console.error("Error updating assignment:", error);
-        res
-            .status(500)
-            .json({ error: "Internal Server Error for updating an assignment" });
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
-// delete a card, week 10
-app.delete("/deletecard/:id", async (req, res) => {
+
+// delete assignment
+app.delete("/assignments/:id", async (req, res) => {
     const { id } = req.params;
 
     try {
-        const [result] = await pool.query("DELETE FROM assignments WHERE id = ?", [id]);
+        const [result] = await pool.query(
+            "DELETE FROM assignments WHERE id = ?",
+            [id]
+        );
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: "Assignment not found" });
         }
 
-        res
-            .status(200)
-            .json({ message: "Assignment deleted", affectedRows: result.affectedRows });
+        res.json({ message: "Assignment deleted successfully" });
     } catch (error) {
         console.error("Error deleting assignment:", error);
-        res
-            .status(500)
-            .json({ error: "Internal Server Error for deleting an assignment" });
+        res.status(500).json({ error: "Internal Server Error" });
     }
-});
-
-app.get("/test-db", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT DATABASE() AS dbname");
-    res.json({ success: true, database: rows[0].dbname });
-  } catch (error) {
-    console.error("DB test failed:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
 });
